@@ -171,5 +171,6 @@ resetArray = function () {
 	loops = 0;
 	swaps = 0;
 	qsCalled = false;
+	finished = false;
 	loop();
 }
