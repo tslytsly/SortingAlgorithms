@@ -13,7 +13,10 @@ let cycles = 1;
 let lines = false;
 let numLines = 25;
 let selType, inpNum;
+let curPivot, curHi, curLo;
 let button;
+let finished = false;
+let qsCalled = false;
 
 function setup() {
 	selType = createSelect();
@@ -24,7 +27,7 @@ function setup() {
 
 	inpNum = createInput('25');
 	inpNum.position(10, 30);
-	inpNum.input(function() {
+	inpNum.input(function () {
 		numLines = inpNum.value();
 		resetArray();
 	});
@@ -41,13 +44,21 @@ function setup() {
 function draw() {
 	background(0);
 
-	if (loops < values.length) {
+	if (!finished) {
 		switch (selType.value()) {
 			case 'Bubble':
 				bubbleSort();
+				qsCalled = false;
 				break;
 			case 'Selection':
 				selectionSort();
+				qsCalled = false;
+				break;
+			case 'QuickSort':
+				if (!qsCalled) {
+					quicksort(values, 0, values.length - 1);
+					qsCalled = true;
+				}
 				break;
 			default:
 				bubbleSort();
@@ -61,14 +72,28 @@ function draw() {
 	for (i = 0; i < values.length; i++) {
 		let col = color(values[i], height, height);
 		let location = map(i, 0, values.length, 0, width);
-		stroke(col);
-		if (lines) {
-			line(location, height, location, height - values[i]);
-		} else {
-			if (cycles <= 10) noStroke();
-			fill(col);
-			rect(location, height - values[i], width / numLines, height);
+		colorMode(RGB);
+		switch (i) {
+			case curHi:
+				stroke(0);
+				fill(0, 255, 0);
+				break;
+			case curLo:
+				stroke(0);
+				fill(0, 0, 255);
+				break;
+			case curPivot:
+				stroke(0);
+				fill(255);
+				break;
+			default:
+				stroke(col);
+				fill(col);
+				break;
 		}
+		colorMode(HSB, height);
+		rect(location, height - values[i], width / numLines, height);
+
 	}
 }
 
@@ -97,6 +122,7 @@ bubbleSort = function () {
 		swaps = 0;
 		loops++;
 	}
+	if (loops == values.length) finished = true;
 }
 
 selectionSort = function () {
@@ -107,9 +133,36 @@ selectionSort = function () {
 			swap(values, j, j + 1);
 		}
 	}
+	if (loops == values.length) finished = true;
 }
 
-resetArray = function() {
+quicksort = function (arr, lo, hi) {
+	setTimeout(() => {
+		if (lo < hi) {
+			let mid = partition(arr, lo, hi);
+			curPivot = mid;
+			curHi = hi;
+			curLo = lo;
+			quicksort(arr, lo, mid - 1);
+			quicksort(arr, mid + 1, hi);
+		}
+	}, 500);
+}
+
+partition = function (arr, low, high) {
+	let pivot = arr[high];
+	let i = (low - 1);
+	for (let j = low; j <= high - 1; j++) {
+		if (arr[j] <= pivot) {
+			i++;
+			swap(arr, i, j);
+		}
+	}
+	swap(arr, i + 1, high);
+	return (i + 1);
+}
+
+resetArray = function () {
 	console.log('resetting')
 	values = [];
 	for (i = 0; i < numLines; i++) {
@@ -117,5 +170,6 @@ resetArray = function() {
 	}
 	loops = 0;
 	swaps = 0;
+	qsCalled = false;
 	loop();
 }
